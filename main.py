@@ -134,8 +134,8 @@ def _split_markdown(raw: str) -> tuple[str, str]:
             img_bytes = b""
         decoded.append((img_bytes, m.group("mime")))
 
-    # Fan out all Dify calls in parallel, max 3 concurrent threads
-    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+    # Fan out all Dify calls in parallel, max 5 concurrent threads
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         futures = [
             executor.submit(image_to_description, img_bytes, mime)
             for img_bytes, mime in decoded

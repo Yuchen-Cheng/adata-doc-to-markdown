@@ -1,4 +1,5 @@
-test_output
-test_input
+test_output/
+test_input/
 .env
+__pycache__/
 __pycache__

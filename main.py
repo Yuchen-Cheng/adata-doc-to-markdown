@@ -27,6 +27,7 @@ Run:
 """
 
 import base64
+import concurrent.futures
 import os
 import re
 import shutil
@@ -114,17 +115,42 @@ def _split_markdown(raw: str) -> tuple[str, str]:
     Return (markdown_no_images, markdown_with_descriptions).
     - markdown_no_images        : data URI image tags removed entirely
     - markdown_with_descriptions: data URI image tags replaced by image_to_description() text
+
+    All image_to_description() calls run in parallel (up to 3 threads) so that a
+    document with many images doesn't pay the Dify round-trip latency serially.
     """
-    no_img, with_desc = [], []
-    last = 0
-    for m in _DATA_URI_RE.finditer(raw):
-        no_img.append(raw[last:m.start()])
-        with_desc.append(raw[last:m.start()])
+    matches = list(_DATA_URI_RE.finditer(raw))
+
+    if not matches:
+        # Fast path: no images at all
+        return raw, raw
+
+    # Decode every image's bytes up-front (cheap, CPU-bound)
+    decoded: list[tuple[bytes, str]] = []
+    for m in matches:
         try:
             img_bytes = base64.b64decode(m.group("b64"))
         except Exception:
             img_bytes = b""
-        with_desc.append(image_to_description(img_bytes, m.group("mime")))
+        decoded.append((img_bytes, m.group("mime")))
+
+    # Fan out all Dify calls in parallel, max 3 concurrent threads
+    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+        futures = [
+            executor.submit(image_to_description, img_bytes, mime)
+            for img_bytes, mime in decoded
+        ]
+        descriptions = [f.result() for f in futures]  # preserve order
+
+    # Reassemble both output strings
+    no_img: list[str] = []
+    with_desc: list[str] = []
+    last = 0
+    for m, desc in zip(matches, descriptions):
+        segment = raw[last:m.start()]
+        no_img.append(segment)
+        with_desc.append(segment)
+        with_desc.append(desc)
         last = m.end()
     no_img.append(raw[last:])
     with_desc.append(raw[last:])

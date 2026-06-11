@@ -1,6 +1,18 @@
-fastapi>=0.111.0
-uvicorn[standard]>=0.29.0
-python-multipart>=0.0.9
+# Azure Functions runtime
+azure-functions>=1.19.0
+
+# Document converters
+markitdown[all]>=0.1.0
+pdfplumber>=0.11.0
+python-pptx>=0.6.23
 openpyxl>=3.1.0
-python-dotenv>=1.0.0
+
+# Image processing
+Pillow>=10.0.0
+Wand>=0.6.13
+
+# Dify API client
 requests>=2.31.0
+
+# Env-var loading (local dev via local.settings.json; prod uses App Settings)
+python-dotenv>=1.0.0

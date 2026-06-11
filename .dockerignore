@@ -1,0 +1,24 @@
+# Never bake secrets or test data into the image
+.env
+*.env
+
+# Test artefacts
+test_input/
+test_output/
+run_tests.py
+test_dify_upload_and_workflow.py
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Docs / misc
+API_REPORT.md
+README.md
+*.md
+
+# Git
+.git/
+.gitignore

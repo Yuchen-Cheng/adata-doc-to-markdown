@@ -1,7 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(Test-Path \"C:\\\\Users\\\\Yuchen_Cheng\\\\Desktop\\\\converter_api\\\\.env\")"
-    ]
-  }
-}

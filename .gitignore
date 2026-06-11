@@ -3,3 +3,6 @@ test_input/
 .env
 __pycache__/
 __pycache__
+run_tests.py
+test_dify_upload_and_workflow.py
+.claude

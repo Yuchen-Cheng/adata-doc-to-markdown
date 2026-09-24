@@ -51,32 +51,6 @@ def table_to_markdown(table):
     return "\n".join(lines)
 
 
-# Chars drawn under a slightly scaled matrix are flagged non-upright; read them as normal LTR text.
-TEXT_DIR_SETTINGS = {"line_dir_rotated": "ttb", "char_dir_rotated": "ltr"}
-
-
-def _snapped_edges(page, tol=1.0, min_len=3):
-    """Rebuild near-axis-aligned lines/thin curves as exact h/v edges.
-
-    pdfplumber marks a line as vertical unless top == bottom exactly, so
-    horizontal rules with float jitter (e.g. inside a scaled Form XObject)
-    are misclassified and the table is never detected.
-    """
-    horizontal, vertical = [], []
-    for obj in page.lines + page.curves:
-        w = obj["x1"] - obj["x0"]
-        h = obj["bottom"] - obj["top"]
-        if h < tol and w >= min_len:
-            y = (obj["top"] + obj["bottom"]) / 2
-            horizontal.append({"object_type": "line", "x0": obj["x0"], "x1": obj["x1"],
-                               "top": y, "bottom": y, "width": w, "height": 0})
-        elif w < tol and h >= min_len:
-            x = (obj["x0"] + obj["x1"]) / 2
-            vertical.append({"object_type": "line", "x0": x, "x1": x,
-                             "top": obj["top"], "bottom": obj["bottom"], "width": 0, "height": h})
-    return horizontal, vertical
-
-
 def extract_page(page, page_num, seen_images=None, duplicate_hashes=None):
     """Extract content from a single page. Images returned as base64 data URIs."""
     if seen_images is None:
@@ -111,14 +85,8 @@ def extract_page(page, page_num, seen_images=None, duplicate_hashes=None):
         except Exception as e:
             print(f"Warning: Failed to extract image from page {page_num}: {e}")
 
-    text = page.extract_text(**TEXT_DIR_SETTINGS) or ""
-    h_edges, v_edges = _snapped_edges(page)
-    table_settings = {
-        "explicit_horizontal_lines": h_edges,
-        "explicit_vertical_lines": v_edges,
-        **{f"text_{k}": v for k, v in TEXT_DIR_SETTINGS.items()},
-    }
-    tables = page.extract_tables(table_settings) or []
+    text = page.extract_text() or ""
+    tables = page.extract_tables() or []
 
     table_cell_texts = set()
     for table in tables:
